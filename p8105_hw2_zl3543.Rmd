@@ -1,0 +1,9 @@
+---
+title: "p8105_hw2_zl3543"
+author: "Zihan Lin"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
