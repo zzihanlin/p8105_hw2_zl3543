@@ -7,3 +7,86 @@ output: github_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+# Problem 1
+# Load necessary libraries
+library(tidyverse)
+
+# Read the CSV data file
+subway_data <- read_csv("/Users/suwa/Desktop/p8105_hw2_zl3543/data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+
+# Retain relevant columns and convert 'entry' to a logical variable
+cleaned_data <- subway_data %>%
+  select(line = `Line`, 
+         station_name = `Station Name`, 
+         station_latitude = `Station Latitude`, 
+         station_longitude = `Station Longitude`, 
+         routes = `Route1`:`Route11`, 
+         entry = `Entry`, 
+         vending = `Vending`, 
+         entrance_type = `Entrance Type`, 
+         ada_compliant = `ADA`) %>%
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
+
+# Check the dimensions of the cleaned dataset
+dim(cleaned_data)
+
+# The dataset contains information about entrances and exits for each subway station in NYC. Key variables include 'line', 'station_name '(station name)', 'station_latitude', and 'station_longitude', 'routes', 'entry', 'vending', 'entrance_type', and 'ada_compliant'. For data cleaning, we retained only the relevant columns, renamed them for clarity, and converted the entry column from a character "YES"/"NO" to a logical 'TRUE'/'FALSE'. The resulting cleaned dataset has dimensions of [1868 rows x 19 columns], where row is the number of entries and column represents the selected variables. This dataset is tidy as each variable is in its own column, each observation is a row, and each cell contains a single value.
+
+# Count distinct stations
+distinct_stations <- cleaned_data %>%
+  distinct(line, station_name)
+
+num_distinct_stations <- nrow(distinct_stations)
+num_distinct_stations
+
+# Include 'ada_compliant' in the distinct selection
+distinct_stations <- cleaned_data %>%
+  distinct(line, station_name, ada_compliant)
+
+# Count ADA compliant stations
+num_ada_compliant_stations <- distinct_stations %>%
+  filter(ada_compliant == TRUE) %>%
+  nrow()
+
+num_ada_compliant_stations
+
+# Calculate the proportion of entrances/exits without vending that allow entry
+no_vending_entries <- cleaned_data %>%
+  filter(vending == "NO") %>%
+  summarise(proportion = mean(entry, na.rm = TRUE))
+
+no_vending_entries
+
+# Convert all route columns to character to avoid type inconsistency
+cleaned_data <- cleaned_data %>%
+  mutate(across(starts_with("route"), as.character))
+
+# Gather route columns into long format
+route_data <- cleaned_data %>%
+  pivot_longer(cols = starts_with("route"), 
+               names_to = "route_number", 
+               values_to = "route_name") %>%
+  filter(!is.na(route_name))
+
+# Display the first few rows to check the result
+head(route_data)
+
+# Count distinct stations serving the A train
+stations_serving_A <- route_data %>%
+  filter(route_name == "A") %>%
+  distinct(line, station_name) 
+
+num_stations_A <- nrow(stations_serving_A)
+num_stations_A
+
+# Find the number of ADA compliant stations serving the A train
+ada_compliant_A <- route_data %>%
+  filter(route_name == "A", ada_compliant == "TRUE") %>%
+  distinct(line, station_name) %>%
+  nrow()
+
+ada_compliant_A
+
+```
