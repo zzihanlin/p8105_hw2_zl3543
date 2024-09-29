@@ -90,3 +90,62 @@ ada_compliant_A <- route_data %>%
 ada_compliant_A
 
 ```
+
+```{r}
+# Problem 2
+# Load necessary libraries
+library(tidyverse)
+library(readxl)
+library(janitor)
+
+
+# Read the Mr.Trash Wheel sheet, specifying the sheet and skipping non-data rows
+mr_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 Trash Wheel Collection Data.xlsx", 
+                             sheet = "Mr. Trash Wheel",
+                             skip = 1) %>%
+  # Rename columns to have reasonable variable names
+  clean_names() %>%
+  # Remove rows with missing dumpster-specific data
+  filter(!is.na(dumpster)) %>%
+  # Round the number of sports balls and convert to integer
+  mutate(sports_balls = as.integer(round(sports_balls, 0)))
+
+# Read the Professor Trash Wheel sheet
+prof_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 Trash Wheel Collection Data.xlsx", 
+                               sheet = "Professor Trash Wheel", 
+                               skip = 1) %>%
+  clean_names() %>%
+  filter(!is.na(dumpster)) %>%
+  mutate(sports_balls = NA_integer_,  # Add sports_balls column as NA
+         trash_wheel = "Professor Trash Wheel")
+
+# Read and clean the Gwynnda Trash Wheel data
+gwynnda_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 Trash Wheel Collection Data.xlsx", 
+                                  sheet = "Gwynnda Trash Wheel", 
+                                  skip = 1) %>%
+  clean_names() %>%
+  filter(!is.na(dumpster)) %>%
+  mutate(sports_balls = NA_integer_,  # Add sports_balls column as NA
+         trash_wheel = "Gwynnda Trash Wheel")
+
+# Convert 'year' to numeric in all datasets
+mr_trash_wheel <- mr_trash_wheel %>%
+  mutate(year = as.numeric(year))
+
+prof_trash_wheel <- prof_trash_wheel %>%
+  mutate(year = as.numeric(year))
+
+gwynnda_trash_wheel <- gwynnda_trash_wheel %>%
+  mutate(year = as.numeric(year))
+
+# Combine all datasets
+combined_trash_wheel <- bind_rows(mr_trash_wheel, prof_trash_wheel, gwynnda_trash_wheel)
+
+# Display the dimensions and the first few rows to check the result
+dim(combined_trash_wheel)
+head(combined_trash_wheel)
+
+```
+
+The combined dataset contains information on trash collection from three different trash wheels: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. There are a total of `r nrow(combined_trash_wheel)` observations and `r ncol(combined_trash_wheel)` variables in the resulting dataset. Key variables include `dumpster`, which identifies the dumpster number, `date` indicating when trash was collected, `weight_tons` representing the weight of trash collected in tons, `plastic_bottles` showing the number of plastic bottles collected, and `sports_balls` counting the number of sports balls recovered. The total weight of trash collected by Professor Trash Wheel is `r sum(combined_trash_wheel %>% filter(trash_wheel == "Professor Trash Wheel") %>% pull(weight_tons), na.rm = TRUE)` tons. Additionally, Gwynnda collected `r sum(combined_trash_wheel %>% filter(trash_wheel == "Gwynnda", lubridate::year(date) == 2022, lubridate::month(date) == 6) %>% pull(cigarette_butts), na.rm = TRUE)` cigarette butts in June 2022.
+
