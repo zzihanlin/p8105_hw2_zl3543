@@ -32,7 +32,7 @@ cleaned_data <- subway_data %>%
 # Check the dimensions of the cleaned dataset
 dim(cleaned_data)
 
-# The dataset contains information about entrances and exits for each subway station in NYC. Key variables include 'line', 'station_name '(station name)', 'station_latitude', and 'station_longitude', 'routes', 'entry', 'vending', 'entrance_type', and 'ada_compliant'. For data cleaning, we retained only the relevant columns, renamed them for clarity, and converted the entry column from a character "YES"/"NO" to a logical 'TRUE'/'FALSE'. The resulting cleaned dataset has dimensions of [1868 rows x 19 columns], where row is the number of entries and column represents the selected variables. This dataset is tidy as each variable is in its own column, each observation is a row, and each cell contains a single value.
+# The dataset contains information about entrances and exits for each subway station in NYC. Key variables include 'line', 'station_name', 'station_latitude', and 'station_longitude', 'routes', 'entry', 'vending', 'entrance_type', and 'ada_compliant'. For data cleaning, we retained only the relevant columns, renamed them for clarity, and converted the entry column from a character "YES"/"NO" to a logical 'TRUE'/'FALSE'. The resulting cleaned dataset has dimensions of [1868 rows x 19 columns], where row is the number of entries and column represents the selected variables. This dataset is tidy as each variable is in its own column, each observation is a row, and each cell contains a single value.
 
 # Count distinct stations
 distinct_stations <- cleaned_data %>%
@@ -100,7 +100,7 @@ library(janitor)
 
 
 # Read the Mr.Trash Wheel sheet, specifying the sheet and skipping non-data rows
-mr_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 Trash Wheel Collection Data.xlsx", 
+mr_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202409 Trash Wheel Collection Data.xlsx", 
                              sheet = "Mr. Trash Wheel",
                              skip = 1) %>%
   # Rename columns to have reasonable variable names
@@ -111,7 +111,7 @@ mr_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 T
   mutate(sports_balls = as.integer(round(sports_balls, 0)))
 
 # Read the Professor Trash Wheel sheet
-prof_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 Trash Wheel Collection Data.xlsx", 
+prof_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202409 Trash Wheel Collection Data.xlsx", 
                                sheet = "Professor Trash Wheel", 
                                skip = 1) %>%
   clean_names() %>%
@@ -120,7 +120,7 @@ prof_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309
          trash_wheel = "Professor Trash Wheel")
 
 # Read and clean the Gwynnda Trash Wheel data
-gwynnda_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202309 Trash Wheel Collection Data.xlsx", 
+gwynnda_trash_wheel <- read_excel("/Users/suwa/Desktop/p8105_hw2_zl3543/data/202409 Trash Wheel Collection Data.xlsx", 
                                   sheet = "Gwynnda Trash Wheel", 
                                   skip = 1) %>%
   clean_names() %>%
@@ -145,7 +145,121 @@ combined_trash_wheel <- bind_rows(mr_trash_wheel, prof_trash_wheel, gwynnda_tras
 dim(combined_trash_wheel)
 head(combined_trash_wheel)
 
+# The process of cleaning data: 1) Importing Datasets: The data for the Great British Bake Off was spread across four CSV files: bakers.csv, bakes.csv, results.csv, and viewers.csv. Each dataset was imported using read_csv(), and column names were cleaned using clean_names() from the janitor package to standardize them to lowercase with underscores. 2) Handling the results Dataset: The results dataset did not have appropriate column names when imported. I reloaded the dataset using col_names = FALSE to read the first row as the actual column names. After setting the first row as the column names and removing that row, I cleaned the column names again using clean_names() to ensure consistency.I renamed relevant columns such as na_3 to baker, na_2 to episode, and na to series to maintain a consistent structure with other datasets. 3) Ensuring Data Type Consistency: I converted the baker columns in all datasets (bakers, results, bakes) to character types to avoid issues during joins. Additionally, the episode column was converted to numeric where necessary to ensure consistent data types. 4) Identifying and Handling Duplicates: Using group_by() and filter(n() > 1), I checked for duplicates in the results and bakes datasets. Duplicates were removed using distinct(), retaining only the first instance of each baker and episode combination. 5) Merging Datasets: The results, bakers, and bakes datasets were merged using left_join() to create a comprehensive dataset called combined_data. This dataset now contains information on each baker's background, their performance in each episode, and details of their bakes. 6) Final Adjustments: I renamed certain columns in combined_data to ensure clarity and consistency (e.g., series to season, baker_age to age, baker_occupation to occupation). I also reordered columns to make the dataset more intuitive, placing key identifiers like season, episode, baker, age, hometown, and occupation at the front. 7) Exporting the Cleaned Dataset: Finally, I exported the cleaned and combined dataset as combined_gbbo_data_cleaned.csv for further analysis.
+
+# Questions and Choices Made: 1) Handling Missing or Ambiguous Data: When importing the results dataset, column names were missing or improperly structured. I chose to reload the data with col_names = FALSE to correctly capture the column headers. Additionally, I verified and renamed columns based on their content. 2) Data Type Conversions: I ensured consistent data types across datasets, particularly converting baker to character and episode to numeric, which was crucial for accurate data merging. 3) Handling Duplicates: I opted to keep the first instance of duplicates, but other methods (e.g., aggregation) could be considered if the data contains valuable repeated information.
+
+# Final Dataset Description: The final combined_data dataset is a well-organized, comprehensive dataset that combines information about bakers, their bakes, and their performance in the Great British Bake Off across multiple episodes and seasons. It contains: 1) Key identifiers: season, episode, baker. 2) Demographic details: age, hometown, occupation. 3) Information about each baker's bakes and performance in the competition.
+
 ```
 
 The combined dataset contains information on trash collection from three different trash wheels: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda. There are a total of `r nrow(combined_trash_wheel)` observations and `r ncol(combined_trash_wheel)` variables in the resulting dataset. Key variables include `dumpster`, which identifies the dumpster number, `date` indicating when trash was collected, `weight_tons` representing the weight of trash collected in tons, `plastic_bottles` showing the number of plastic bottles collected, and `sports_balls` counting the number of sports balls recovered. The total weight of trash collected by Professor Trash Wheel is `r sum(combined_trash_wheel %>% filter(trash_wheel == "Professor Trash Wheel") %>% pull(weight_tons), na.rm = TRUE)` tons. Additionally, Gwynnda collected `r sum(combined_trash_wheel %>% filter(trash_wheel == "Gwynnda", lubridate::year(date) == 2022, lubridate::month(date) == 6) %>% pull(cigarette_butts), na.rm = TRUE)` cigarette butts in June 2022.
+
+```{r}
+# Problem 3
+# Load necessary libraries
+library(tidyverse)
+library(knitr)
+library(janitor)
+
+# Read the CSV data files
+bakers <- read_csv("/Users/suwa/Desktop/p8105_hw2_zl3543/data/gbb_datasets/bakers.csv") %>% clean_names()
+bakes <- read_csv("/Users/suwa/Desktop/p8105_hw2_zl3543/data/gbb_datasets/bakes.csv") %>% clean_names()
+results <- read_csv("/Users/suwa/Desktop/p8105_hw2_zl3543/data/gbb_datasets/results.csv", col_names = FALSE)
+
+
+# Set the first row of 'results' as column names and clean
+colnames(results) <- results[1, ]
+results <- results[-1, ] %>% clean_names()
+
+# Rename relevant columns for consistency
+results <- results %>%
+  rename(
+    baker = na_3,
+    episode = na_2,
+    series = na
+  )
+
+# Rename 'baker_name' to 'baker' if necessary
+bakers <- bakers %>% rename(baker = baker_name)  # Adjust 'baker_name' to match the actual column name found in your dataset
+
+# Convert 'baker' and 'episode' columns to appropriate data types
+bakers <- bakers %>% mutate(baker = as.character(baker))
+results <- results %>% mutate(baker = as.character(baker), episode = as.numeric(episode))
+bakes <- bakes %>% mutate(baker = as.character(baker), episode = as.numeric(episode))
+
+# Check for discrepancies using anti_join (optional, useful for debugging)
+bakes_without_bakers <- anti_join(bakes, bakers, by = "baker")
+results_without_bakers <- anti_join(results, bakers, by = "baker")
+results_without_bakes <- anti_join(results, bakes, by = c("baker", "episode"))
+
+# Remove duplicates (keeping the first instance)
+results <- results %>% distinct(baker, episode, .keep_all = TRUE)
+bakes <- bakes %>% distinct(baker, episode, .keep_all = TRUE)
+
+# Merge all datasets into combined_data
+combined_data <- results %>%
+  left_join(bakers, by = "baker") %>%
+  left_join(bakes, by = c("baker", "episode"))
+
+# Rename and reorder columns in combined_data for consistency and readability
+combined_data <- combined_data %>%
+  rename(
+    season = series,
+    age = baker_age,
+    occupation = baker_occupation
+  ) %>%
+  select(season, episode, baker, age, hometown, occupation, everything())
+
+# Inspect the final combined data
+head(combined_data)
+
+# Export the cleaned and combined dataset as a CSV
+write_csv(combined_data, "combined_gbbo_data_cleaned.csv")
+
+# Display column names of combined_data
+colnames(combined_data)
+
+# Rename the column to 'result' if needed
+combined_data <- combined_data %>%
+  rename(result = in_stayed_in_out_eliminated_star_baker_star_baker_winner_series_winner_runner_up_series_runner_up_wd_withdrew)
+
+# Check the first few rows of the combined_data to ensure data is present
+head(combined_data)
+
+# Display unique values in the 'result' column
+unique(combined_data$result)
+
+# Check how many rows match the criteria
+filtered_data <- combined_data %>%
+  filter(season >= 5 & season <= 10, result %in% c("Star Baker", "Winner"))
+
+nrow(filtered_data)
+
+# Clean the result column by trimming whitespace and converting to a consistent case
+combined_data <- combined_data %>%
+  mutate(result = str_trim(result) %>% str_to_title())
+
+# Check unique values again to confirm they are cleaned
+unique(combined_data$result)
+
+# Filter and create the Star Baker/Winner table for Seasons 5 to 10
+star_baker_table <- combined_data %>%
+  filter(season >= 5 & season <= 10, result %in% c("Star Baker", "Winner")) %>%
+  select(season, episode, baker, result) %>%
+  arrange(season, episode)
+
+# Display the table
+knitr::kable(
+  star_baker_table, 
+  caption = "Star Baker/Winner for Each Episode (Seasons 5 to 10)",
+  col.names = c("Season", "Episode", "Baker", "Result"),
+  format = "markdown"
+)
+
+
+
+
+
+```
 
