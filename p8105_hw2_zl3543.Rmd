@@ -257,6 +257,9 @@ knitr::kable(
   format = "markdown"
 )
 
+# Save the table to a CSV
+write_csv(star_baker_table, "star_baker_winner_seasons5_10.csv")
+
 # Read the viewership data
 viewers <- read_csv("/Users/suwa/Desktop/p8105_hw2_zl3543/data/gbb_datasets/viewers.csv") %>% clean_names()
 
@@ -277,6 +280,9 @@ viewers_long <- viewers %>%
 # Check the structure of the reshaped data
 head(viewers_long)
 
+# Save the viewership data
+write_csv(viewers_long, "viewership_data_cleaned.csv")
+
 # Calculate average viewership for Season 1
 avg_viewership_s1 <- viewers_long %>%
   filter(season == 1) %>%
@@ -290,9 +296,6 @@ avg_viewership_s5 <- viewers_long %>%
 # Display the results
 avg_viewership_s1$average_viewership
 avg_viewership_s5$average_viewership
-
-
-
 
 
 ```
