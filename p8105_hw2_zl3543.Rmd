@@ -257,6 +257,40 @@ knitr::kable(
   format = "markdown"
 )
 
+# Read the viewership data
+viewers <- read_csv("/Users/suwa/Desktop/p8105_hw2_zl3543/data/gbb_datasets/viewers.csv") %>% clean_names()
+
+# Display the first 10 rows of the viewership data
+head(viewers, 10)
+
+# Reshape the dataset from wide to long format
+viewers_long <- viewers %>%
+  pivot_longer(
+    cols = starts_with("series"),  # Pivot all columns that start with "series"
+    names_to = "season",           # Create a "season" column
+    values_to = "viewership"       # Place the values into a "viewership" column
+  ) %>%
+  mutate(
+    season = as.numeric(str_replace(season, "series_", ""))  # Convert "series_1", "series_2", etc. to numeric
+  )
+
+# Check the structure of the reshaped data
+head(viewers_long)
+
+# Calculate average viewership for Season 1
+avg_viewership_s1 <- viewers_long %>%
+  filter(season == 1) %>%
+  summarise(average_viewership = mean(viewership, na.rm = TRUE))
+
+# Calculate average viewership for Season 5
+avg_viewership_s5 <- viewers_long %>%
+  filter(season == 5) %>%
+  summarise(average_viewership = mean(viewership, na.rm = TRUE))
+
+# Display the results
+avg_viewership_s1$average_viewership
+avg_viewership_s5$average_viewership
+
 
 
 
